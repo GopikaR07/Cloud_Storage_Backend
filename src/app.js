@@ -6,6 +6,10 @@ const app = express();
 
 const authRoutes = require("./routes/authRoutes");
 
+const fileRoutes = require("./routes/fileRoutes");
+
+app.use("/api/files", fileRoutes);
+
 
 app.use(cors());
 app.use(express.json());
