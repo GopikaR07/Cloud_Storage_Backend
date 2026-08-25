@@ -106,7 +106,125 @@ const uploadFile = async (req, res) => {
     }
 };
 
+const renameFile = async (req, res) => {
+    try {
+        const { name } = req.body;
+        const fileId = req.params.id;
+        const userId = req.user.userId;
+
+        if (!name) {
+            return res.status(400).json({
+                message: "File name is required"
+            });
+        }
+
+        const result = await pool.query(
+            `UPDATE files
+             SET name = $1, updated_at = now()
+             WHERE id = $2
+             AND owner_id = $3
+             AND is_deleted = false
+             RETURNING *`,
+            [name, fileId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "File not found"
+            });
+        }
+
+        res.json({
+            message: "File renamed successfully",
+            file: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Failed to rename file"
+        });
+    }
+};
+
+const moveFile = async (req, res) => {
+    try {
+        const { folderId } = req.body;
+        const fileId = req.params.id;
+        const userId = req.user.userId;
+
+        const result = await pool.query(
+            `UPDATE files
+             SET folder_id = $1,
+                 updated_at = now()
+             WHERE id = $2
+             AND owner_id = $3
+             AND is_deleted = false
+             RETURNING *`,
+            [folderId || null, fileId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "File not found"
+            });
+        }
+
+        res.json({
+            message: "File moved successfully",
+            file: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Failed to move file"
+        });
+    }
+};
+
+const deleteFile = async (req, res) => {
+    try {
+        const fileId = req.params.id;
+        const userId = req.user.userId;
+
+        const result = await pool.query(
+            `UPDATE files
+             SET is_deleted = true,
+                 updated_at = now()
+             WHERE id = $1
+             AND owner_id = $2
+             AND is_deleted = false
+             RETURNING *`,
+            [fileId, userId]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "File not found"
+            });
+        }
+
+        res.json({
+            message: "File moved to trash",
+            file: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error(error);
+
+        res.status(500).json({
+            message: "Failed to delete file"
+        });
+    }
+};
+
 module.exports = {
     uploadFile,
-    getFile
+    getFile,
+    renameFile,
+    moveFile,
+    deleteFile
 };

@@ -8,12 +8,17 @@ const authRoutes = require("./routes/authRoutes");
 
 const fileRoutes = require("./routes/fileRoutes");
 
-app.use("/api/files", fileRoutes);
+const folderRoutes = require("./routes/folderRoutes");
+
 
 
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+
+app.use("/api/files", fileRoutes);
+app.use("/api/folders", folderRoutes);
+
 
 app.get("/health", (req, res) => {
     res.json({
