@@ -12,9 +12,12 @@ const folderRoutes = require("./routes/folderRoutes");
 
 const shareRoutes = require("./routes/shareRoutes");
 
+const searchRoutes = require("./routes/searchRoutes");
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api/search", searchRoutes);
 
 app.use("/api/files", fileRoutes);
 app.use("/api/folders", folderRoutes);
