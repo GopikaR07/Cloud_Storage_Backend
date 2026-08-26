@@ -10,9 +10,9 @@ const getFile = async (req, res) => {
             `SELECT *
              FROM files
              WHERE id = $1
-             AND owner_id = $2
+             
              AND is_deleted = false`,
-            [fileId, userId]
+            [fileId]
         );
 
         if (result.rows.length === 0) {
@@ -22,6 +22,25 @@ const getFile = async (req, res) => {
         }
 
         const file = result.rows[0];
+
+        const isOwner = file.owner_id === userId;
+
+if (!isOwner) {
+    const shareResult = await pool.query(
+        `SELECT role
+         FROM shares
+         WHERE resource_type = 'file'
+         AND resource_id = $1
+         AND grantee_user_id = $2`,
+        [fileId, userId]
+    );
+
+    if (shareResult.rows.length === 0) {
+        return res.status(403).json({
+            message: "You do not have access to this file"
+        });
+    }
+}
 
         const { data, error } = await supabase
             .storage

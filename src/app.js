@@ -10,7 +10,7 @@ const fileRoutes = require("./routes/fileRoutes");
 
 const folderRoutes = require("./routes/folderRoutes");
 
-
+const shareRoutes = require("./routes/shareRoutes");
 
 app.use(cors());
 app.use(express.json());
@@ -19,6 +19,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/files", fileRoutes);
 app.use("/api/folders", folderRoutes);
 
+app.use("/api/shares", shareRoutes);
 
 app.get("/health", (req, res) => {
     res.json({
