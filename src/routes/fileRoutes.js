@@ -4,6 +4,7 @@ const multer = require("multer");
 const authMiddleware = require("../middleware/authMiddleware");
 
 const {
+    getFiles,
     uploadFile,
     getFile,
     renameFile,
@@ -17,6 +18,25 @@ const upload = multer({
     storage: multer.memoryStorage()
 });
 
+
+/* =========================================================
+   FILE LISTING
+========================================================= */
+
+// Root files
+// GET /api/files
+
+router.get(
+    "/",
+    authMiddleware,
+    getFiles
+);
+
+
+/* =========================================================
+   FILE UPLOAD
+========================================================= */
+
 router.post(
     "/upload",
     authMiddleware,
@@ -24,12 +44,49 @@ router.post(
     uploadFile
 );
 
-router.get("/:id", authMiddleware, getFile);
 
-router.patch("/:id", authMiddleware, renameFile);
+/* =========================================================
+   SINGLE FILE
+========================================================= */
 
-router.patch("/:id/move", authMiddleware, moveFile);
+router.get(
+    "/:id",
+    authMiddleware,
+    getFile
+);
 
-router.delete("/:id", authMiddleware, deleteFile);
+
+/* =========================================================
+   RENAME
+========================================================= */
+
+router.patch(
+    "/:id",
+    authMiddleware,
+    renameFile
+);
+
+
+/* =========================================================
+   MOVE
+========================================================= */
+
+router.patch(
+    "/:id/move",
+    authMiddleware,
+    moveFile
+);
+
+
+/* =========================================================
+   DELETE
+========================================================= */
+
+router.delete(
+    "/:id",
+    authMiddleware,
+    deleteFile
+);
+
 
 module.exports = router;

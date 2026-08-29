@@ -1,6 +1,38 @@
 const supabase = require("../config/supabase");
 const pool = require("../config/db");
 
+
+const getFiles = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { folderId } = req.query;
+
+        const result = await pool.query(
+            `SELECT *
+             FROM files
+             WHERE owner_id = $1
+             AND is_deleted = false
+             AND folder_id IS NOT DISTINCT FROM $2
+             ORDER BY name ASC`,
+            [
+                userId,
+                folderId || null
+            ]
+        );
+
+        res.json({
+            files: result.rows
+        });
+
+    } catch (error) {
+        console.error("Get files error:", error);
+
+        res.status(500).json({
+            message: "Failed to fetch files"
+        });
+    }
+};
+
 const getFile = async (req, res) => {
     try {
         const userId = req.user.userId;
@@ -241,6 +273,7 @@ const deleteFile = async (req, res) => {
 };
 
 module.exports = {
+    getFiles,
     uploadFile,
     getFile,
     renameFile,
