@@ -20,12 +20,41 @@ const getFiles = async (req, res) => {
             ]
         );
 
+        const bucket =
+            process.env.SUPABASE_STORAGE_BUCKET;
+
+        const filesWithUrls = await Promise.all(
+            result.rows.map(async (file) => {
+
+                const { data, error } =
+                    await supabase
+                        .storage
+                        .from(bucket)
+                        .createSignedUrl(
+                            file.storage_key,
+                            3600
+                        );
+
+                return {
+                    ...file,
+
+                    url: error
+                        ? null
+                        : data.signedUrl
+                };
+            })
+        );
+
         res.json({
-            files: result.rows
+            files: filesWithUrls
         });
 
     } catch (error) {
-        console.error("Get files error:", error);
+
+        console.error(
+            "Get files error:",
+            error
+        );
 
         res.status(500).json({
             message: "Failed to fetch files"
@@ -101,6 +130,7 @@ if (!isOwner) {
 
 const uploadFile = async (req, res) => {
     try {
+
         if (!req.file) {
             return res.status(400).json({
                 message: "No file uploaded"
@@ -111,45 +141,98 @@ const uploadFile = async (req, res) => {
 
         const file = req.file;
 
-        const storageKey = `${userId}/${Date.now()}-${file.originalname}`;
+        const folderId =
+            req.body.folderId || null;
 
-        const { error: uploadError } = await supabase
-            .storage
-            .from(process.env.SUPABASE_STORAGE_BUCKET)
-            .upload(storageKey, file.buffer, {
-                contentType: file.mimetype,
-                upsert: false
-            });
+        const storageKey =
+            `${userId}/${Date.now()}-${file.originalname}`;
+
+        const { error: uploadError } =
+            await supabase
+                .storage
+                .from(process.env.SUPABASE_STORAGE_BUCKET)
+                .upload(
+                    storageKey,
+                    file.buffer,
+                    {
+                        contentType: file.mimetype,
+                        upsert: false
+                    }
+                );
 
         if (uploadError) {
-            console.error(uploadError);
+
+            console.error(
+                "Supabase upload error:",
+                uploadError
+            );
 
             return res.status(500).json({
                 message: "File upload failed"
             });
         }
 
+
         const result = await pool.query(
             `INSERT INTO files
-            (name, mime_type, size_bytes, storage_key, owner_id)
-            VALUES ($1, $2, $3, $4, $5)
+            (
+                name,
+                mime_type,
+                size_bytes,
+                storage_key,
+                owner_id,
+                folder_id
+            )
+            VALUES ($1, $2, $3, $4, $5, $6)
             RETURNING *`,
             [
                 file.originalname,
                 file.mimetype,
                 file.size,
                 storageKey,
-                userId
+                userId,
+                folderId
             ]
         );
 
+
+        const uploadedFile =
+            result.rows[0];
+
+
+        const { data, error } =
+            await supabase
+                .storage
+                .from(
+                    process.env.SUPABASE_STORAGE_BUCKET
+                )
+                .createSignedUrl(
+                    storageKey,
+                    3600
+                );
+
+
         res.status(201).json({
-            message: "File uploaded successfully",
-            file: result.rows[0]
+
+            message:
+                "File uploaded successfully",
+
+            file: {
+                ...uploadedFile,
+
+                url: error
+                    ? null
+                    : data.signedUrl
+            }
+
         });
 
     } catch (error) {
-        console.error(error);
+
+        console.error(
+            "Upload file error:",
+            error
+        );
 
         res.status(500).json({
             message: "Something went wrong"
