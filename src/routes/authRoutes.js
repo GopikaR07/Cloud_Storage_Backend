@@ -4,7 +4,8 @@ const {
     register,
     login,
     getMe,
-    findUserByEmail
+    findUserByEmail,
+    getUserByEmail
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -25,6 +26,12 @@ router.get(
     "/by-email",
     authMiddleware,
     findUserByEmail
+);
+
+router.get(
+    "/by-email",
+    authMiddleware,
+    getUserByEmail
 );
 
 module.exports = router;
