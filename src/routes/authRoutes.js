@@ -3,7 +3,8 @@ const express = require("express");
 const {
     register,
     login,
-    getMe
+    getMe,
+    findUserByEmail
 } = require("../controllers/authController");
 
 const authMiddleware = require("../middleware/authMiddleware");
@@ -20,5 +21,10 @@ router.post("/logout", (req, res) => {
 });
 
 router.get("/me", authMiddleware, getMe);
+router.get(
+    "/by-email",
+    authMiddleware,
+    findUserByEmail
+);
 
 module.exports = router;

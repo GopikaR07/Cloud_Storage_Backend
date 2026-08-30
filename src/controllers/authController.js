@@ -129,9 +129,48 @@ const register = async (req, res) => {
     }
 };
 
+const findUserByEmail = async (req, res) => {
+    try {
+        const { email } = req.query;
+
+        if (!email) {
+            return res.status(400).json({
+                message: "Email is required"
+            });
+        }
+
+        const result = await pool.query(
+            `SELECT id, email, name
+             FROM users
+             WHERE LOWER(email) = LOWER($1)
+             LIMIT 1`,
+            [email.trim()]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({
+                message: "User not found"
+            });
+        }
+
+        res.json({
+            user: result.rows[0]
+        });
+
+    } catch (error) {
+        console.error("Find user error:", error);
+
+        res.status(500).json({
+            message: "Failed to find user"
+        });
+    }
+};
+
 
 module.exports = {
     register,
     login,
-    getMe
+    getMe,
+    findUserByEmail
 };
+    
