@@ -28,10 +28,6 @@ router.get(
     findUserByEmail
 );
 
-router.get(
-    "/by-email",
-    authMiddleware,
-    getUserByEmail
-);
+
 
 module.exports = router;
