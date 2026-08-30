@@ -57,6 +57,46 @@ const createShare = async (req, res) => {
     }
 };
 
+const getSharedFiles = async (req, res) => {
+    try {
+        const userId = req.user.userId;
+
+        const result = await pool.query(
+            `SELECT
+                f.*,
+                s.role,
+                s.created_at AS shared_at,
+                u.email AS shared_by_email,
+                u.name AS shared_by_name
+             FROM shares s
+             JOIN files f
+               ON s.resource_id = f.id
+             JOIN users u
+               ON s.created_by = u.id
+             WHERE s.grantee_user_id = $1
+               AND s.resource_type = 'file'
+               AND f.is_deleted = false
+             ORDER BY s.created_at DESC`,
+            [userId]
+        );
+
+        res.json({
+            files: result.rows
+        });
+
+    } catch (error) {
+        console.error(
+            "Get shared files error:",
+            error
+        );
+
+        res.status(500).json({
+            message: "Failed to fetch shared files"
+        });
+    }
+};
+
 module.exports = {
-    createShare
+    createShare,
+    getSharedFiles
 };
