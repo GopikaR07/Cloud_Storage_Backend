@@ -12,6 +12,8 @@ const folderRoutes = require("./routes/folderRoutes");
 
 const shareRoutes = require("./routes/shareRoutes");
 
+const publicShareRoutes = require("./routes/publicShareRoutes");
+
 const searchRoutes = require("./routes/searchRoutes");
 
 app.use(cors());
@@ -21,6 +23,8 @@ app.use("/api/search", searchRoutes);
 
 app.use("/api/files", fileRoutes);
 app.use("/api/folders", folderRoutes);
+
+app.use("/api/public", publicShareRoutes);
 
 app.use("/api/shares", shareRoutes);
 
