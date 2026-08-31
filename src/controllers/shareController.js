@@ -1,6 +1,7 @@
 const pool = require("../config/db");
 const bcrypt = require("bcrypt");
 const crypto = require("crypto");
+const supabase = require("../config/supabase");
 
 const FRONTEND_URL =
     process.env.FRONTEND_URL || "http://localhost:5173";
@@ -727,7 +728,7 @@ const getPublicLink = async (req, res) => {
                 ls.password_hash,
                 ls.expires_at,
                 f.name AS file_name,
-                f.storage_path
+                f.storage_key
              FROM link_shares ls
              LEFT JOIN files f
                ON ls.resource_type = 'file'
@@ -754,13 +755,33 @@ const getPublicLink = async (req, res) => {
             });
         }
 
+        const requiresPassword = Boolean(link.password_hash);
+
+        let downloadUrl = null;
+
+        // Only hand out the download URL up front when there's no
+        // password gate. Password-protected links get their URL from
+        // verifyPublicLinkPassword instead.
+        if (!requiresPassword && link.storage_key) {
+
+            const { data, error } = await supabase
+                .storage
+                .from(process.env.SUPABASE_STORAGE_BUCKET)
+                .createSignedUrl(link.storage_key, 300);
+
+            if (!error) {
+                downloadUrl = data.signedUrl;
+            }
+        }
+
         res.json({
             id: link.id,
             resourceType: link.resource_type,
             resourceId: link.resource_id,
             fileName: link.file_name,
-            requiresPassword: Boolean(link.password_hash),
-            expiresAt: link.expires_at
+            requiresPassword,
+            expiresAt: link.expires_at,
+            downloadUrl
         });
 
     } catch (error) {
@@ -792,7 +813,7 @@ const verifyPublicLinkPassword = async (req, res) => {
             `SELECT
                 ls.*,
                 f.name AS file_name,
-                f.storage_path
+                f.storage_key
              FROM link_shares ls
              LEFT JOIN files f
                ON ls.resource_type = 'file'
@@ -818,34 +839,46 @@ const verifyPublicLinkPassword = async (req, res) => {
             });
         }
 
-        if (!link.password_hash) {
+        // If there's a password, it must be checked before we hand out
+        // anything else.
+        if (link.password_hash) {
 
-            return res.json({
-                valid: true,
-                fileName: link.file_name
-            });
+            if (!password) {
+                return res.status(400).json({
+                    message: "Password is required"
+                });
+            }
+
+            const valid = await bcrypt.compare(
+                password,
+                link.password_hash
+            );
+
+            if (!valid) {
+                return res.status(401).json({
+                    message: "Incorrect password"
+                });
+            }
         }
 
-        if (!password) {
-            return res.status(400).json({
-                message: "Password is required"
-            });
-        }
+        let downloadUrl = null;
 
-        const valid = await bcrypt.compare(
-            password,
-            link.password_hash
-        );
+        if (link.storage_key) {
 
-        if (!valid) {
-            return res.status(401).json({
-                message: "Incorrect password"
-            });
+            const { data, error } = await supabase
+                .storage
+                .from(process.env.SUPABASE_STORAGE_BUCKET)
+                .createSignedUrl(link.storage_key, 300);
+
+            if (!error) {
+                downloadUrl = data.signedUrl;
+            }
         }
 
         res.json({
             valid: true,
-            fileName: link.file_name
+            fileName: link.file_name,
+            downloadUrl
         });
 
     } catch (error) {
