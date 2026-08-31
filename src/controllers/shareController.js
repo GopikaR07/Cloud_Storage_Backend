@@ -3,8 +3,10 @@ const bcrypt = require("bcrypt");
 const crypto = require("crypto");
 const supabase = require("../config/supabase");
 
-const FRONTEND_URL =
-    process.env.FRONTEND_URL || "http://localhost:5173";
+// Strip any trailing slash so we never end up with "http://host//shared/..."
+const FRONTEND_URL = (
+    process.env.FRONTEND_URL || "http://localhost:5173"
+).replace(/\/+$/, "");
 
 
 // =====================================================
