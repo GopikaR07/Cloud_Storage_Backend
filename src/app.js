@@ -16,10 +16,15 @@ const publicShareRoutes = require("./routes/publicShareRoutes");
 
 const searchRoutes = require("./routes/searchRoutes");
 
+const trashRoutes = require("./routes/trashRoutes");
+const versionRoutes = require("./routes/versionRoutes");
+
 app.use(cors());
 app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/search", searchRoutes);
+app.use("/api/trash", trashRoutes);
+app.use("/api/versions", versionRoutes);
 
 app.use("/api/files", fileRoutes);
 app.use("/api/folders", folderRoutes);
