@@ -2,7 +2,7 @@
 
 REST API for **CloudNova**, a cloud file storage & sharing app. Built with Node.js + Express, PostgreSQL (via Supabase) for metadata, and Supabase Storage for the actual files. Auth is stateless JWT (Bearer token).
 
-🔗 Frontend repo: [Cloud_Storage_Frontend](#) <!-- add the frontend repo link here -->
+🔗 Frontend repo: [Cloud_Storage_Frontend](#) [<!-- add the frontend repo link here -->](https://github.com/GopikaR07/Cloud_Storage_Frontend.git)
 
 Live API: `https://cloud-storage-backend-six.vercel.app`
 
